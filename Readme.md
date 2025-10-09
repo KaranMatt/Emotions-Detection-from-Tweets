@@ -7,7 +7,7 @@ A deep learning project for detecting emotions from Twitter text data using recu
 - **Size**: ~410,000 tweets
 - **Classes**: 6 emotion categories
 - **Task**: Multi-class emotion classification
-- **Location**: Available in this repository (`/data` folder)
+- **Location**: Available in this repository
 - **Format**: CSV
 
 ##  Model Architecture
