@@ -7,8 +7,8 @@ A deep learning project for detecting emotions from Twitter text data using recu
 - **Size**: ~410,000 tweets
 - **Classes**: 6 emotion categories
 - **Task**: Multi-class emotion classification
-- **Location**: Available in this repository
 - **Format**: CSV
+- **Location**: Available in this repository
 
 ##  Model Architecture
 
@@ -34,12 +34,23 @@ This project explores four different recurrent neural network architectures for 
 - Text Vectorization layer
 - Embedding layer
 
-## Results
+All models include:
+- Text vectorization preprocessing
+- Embedding layer for word representations
+- Recurrent layers (GRU/LSTM/Bi-GRU/Bi-LSTM)
+- Dense output layer with softmax activation for 6-class classification
+
+### Training Configuration
+- **Data Split**: 75% training / 25% testing
+- **Training samples**: ~307,500 tweets
+- **Testing samples**: ~102,500 tweets
+
+##  Results
 
 | Model | Loss | Accuracy | Precision | Recall |
 |-------|------|----------|-----------|--------|
-| GRU (40 units) | 0.4252 | **85.17%** | - | - |
-| LSTM (40 units) | 0.4195 | **85.54%** | **87.17%** | **84.75%** |
+| **LSTM (40 units)** | **0.4195** | **85.54%** | **87.17%** | **84.75%** |
+| GRU (40 units) | 0.4252 | 85.17% | - | - |
 | Bi-GRU (32 units) | 0.4861 | 85.08% | 86.37% | 84.53% |
 | Bi-LSTM (32 units) | 0.4878 | 84.53% | 85.80% | 84.05% |
 
@@ -51,13 +62,13 @@ This project explores four different recurrent neural network architectures for 
 - Unidirectional architectures (GRU and LSTM) outperformed bidirectional variants in this task
 - Simple LSTM architecture proved most effective despite having fewer parameters than bidirectional models
 
-## Tech Stack
+##  Tech Stack
 
 - **Framework**: TensorFlow/Keras
 - **Language**: Python
 - **Key Libraries**: NumPy, Pandas, Matplotlib, Seaborn
 
-## Getting Started
+##  Getting Started
 
 ### Prerequisites
 ```bash
@@ -68,22 +79,18 @@ pip install tensorflow numpy pandas matplotlib seaborn
 ```python
 # Load and preprocess data
 # Train model
-# Evaluate performance
+# Evaluate performance on test set
 ```
-
-## Model Training
-
-Each model includes:
-- Text vectorization preprocessing
-- Embedding layer for word representations
-- Recurrent layers (GRU/LSTM/Bi-GRU/Bi-LSTM)
-- Dense output layer with softmax activation
 
 ##  Future Improvements
 
 - Experiment with attention mechanisms
 - Try transformer-based architectures (BERT, RoBERTa)
-- Implement ensemble methods
+- Implement ensemble methods combining multiple models
 - Add real-time emotion detection API
 - Deploy as web application
+- Explore additional preprocessing techniques
+- Perform hyperparameter tuning for optimal performance
+
+
 
