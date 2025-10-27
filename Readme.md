@@ -228,16 +228,12 @@ emotion-detection/
 - [ ] Add multilingual support
 - [ ] Perform error analysis on misclassified samples
 
-## License
-
-MIT License
 
 ## Author
 
-[Your Name]
+Karan Mattoo
 
 ## Acknowledgments
 
-- Dataset: [Source/Citation if applicable]
 - MLflow for experiment tracking
 - DVC for data and model versioning
