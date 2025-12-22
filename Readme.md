@@ -70,7 +70,7 @@ All models use the same preprocessing pipeline with TensorFlow's functional API 
   - Test F1-Score: 92.97%
   - Training time: ~10 minutes (5 epochs)
 
-### 3. LSTM Model (Best Performance) ⭐
+### 3. LSTM Model (Best Performance)
 - **Architecture**:
   - Input → TextVectorization → Embedding(128d)
   - LSTM(32, return_sequences=True, dropout=0.3, recurrent_dropout=0.2)
