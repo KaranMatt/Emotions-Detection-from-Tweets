@@ -1,6 +1,6 @@
 # Emotion Detection with Deep Learning
 
-A text-based emotion classification system that detects six different emotions using LSTM and GRU neural networks. This project demonstrates the superiority of deep learning approaches for large-scale, complex NLP tasks.
+A text-based emotion classification system that detects six different emotions using LSTM, GRU, and Bidirectional LSTM neural networks, served via a FastAPI REST API. This project demonstrates the superiority of deep learning approaches for large-scale, complex NLP tasks.
 
 ## Overview
 
@@ -20,7 +20,7 @@ Traditional machine learning models (Logistic Regression, Random Forest, SVM) ar
 - **Feature engineering burden**: Traditional ML requires manual feature extraction (TF-IDF, n-grams), which loses contextual information
 - **Long-range dependencies**: Understanding emotion requires capturing word relationships across sentences
 
-Deep learning models (LSTM/GRU) automatically learn hierarchical features and temporal patterns, making them ideal for this scale and complexity.
+Deep learning models (LSTM/GRU/BiLSTM) automatically learn hierarchical features and temporal patterns, making them ideal for this scale and complexity.
 
 ## Dataset
 
@@ -70,7 +70,7 @@ All models use the same preprocessing pipeline with TensorFlow's functional API 
   - Test F1-Score: 92.97%
   - Training time: ~10 minutes (5 epochs)
 
-### 3. LSTM Model (Best Performance)
+### 3. LSTM Model
 - **Architecture**:
   - Input → TextVectorization → Embedding(128d)
   - LSTM(32, return_sequences=True, dropout=0.3, recurrent_dropout=0.2)
@@ -85,6 +85,23 @@ All models use the same preprocessing pipeline with TensorFlow's functional API 
   - Training time: ~7 minutes (6 epochs)
 - **Tracked with**: DVC
 - **Saved as**: `Models/lstm.keras`
+
+### 4. Bidirectional LSTM (BiLSTM)
+- **Architecture**:
+  - Input → TextVectorization → Embedding(128d)
+  - Bidirectional(LSTM(32, return_sequences=True, dropout=0.3, recurrent_dropout=0.3))
+  - Bidirectional(LSTM(32, dropout=0.3, recurrent_dropout=0.3))
+  - Dropout(0.3) → Dense(6, softmax)
+- **Parameters**: ~3.5M
+- **Motivation**: Unlike a standard LSTM which processes sequences left-to-right, a BiLSTM processes the sequence in both forward and backward directions simultaneously. This allows the model to capture context from both past and future tokens at each timestep, which is particularly valuable for emotion detection where the sentiment of a word can depend heavily on words that follow it.
+- **Performance**:
+  - Test Accuracy: 92.71%
+  - Test F1-Score: 92.94%
+  - Test Precision: 93.97%
+  - Test Recall: 92.71%
+  - Training time: ~16 minutes (5 epochs)
+- **Tracked with**: DVC
+- **Saved as**: `Models/bilstm.keras`
 
 ## Evaluation Metrics
 
@@ -126,11 +143,56 @@ Version-controlled assets:
 - **Models**: 
   - `Models/gru.keras` (GRU v1)
   - `Models/lstm.keras` (LSTM)
+  - `Models/bilstm.keras` (BiLSTM)
   - Pointer file: `models.dvc`
 - DVC pointer files (`.dvc`) are committed to Git for version tracking
 - Actual large files stored in remote DVC storage
 - Ensures reproducibility and efficient storage
 - Enables model and data lineage tracking
+
+## API — FastAPI Deployment
+
+The BiLSTM model is served as a REST API using **FastAPI** (`main.py`). The model is loaded once at startup via a lifespan context manager and reused across requests for efficiency.
+
+### Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/root` | Welcome message |
+| GET | `/health` | Check if the model is loaded and ready |
+| POST | `/predict` | Predict emotion from input text |
+
+### Request & Response
+
+**POST `/predict`**
+
+Request body:
+```json
+{ "text": "i feel really happy today" }
+```
+
+Response:
+```json
+{
+  "Emotion": "joy",
+  "probability": 0.97,
+  "confidence": "high"
+}
+```
+
+Confidence levels are determined by the predicted class probability: `high` (>0.6), `low confidence` (0.3–0.6), or `Neutral/unknown` (<0.3).
+
+### Running the API
+
+```bash
+# Install API dependencies
+pip install fastapi uvicorn
+
+# Start the server
+uvicorn main:app --reload
+```
+
+The interactive docs are available at `http://127.0.0.1:8000/docs` once the server is running.
 
 ## Requirements
 
@@ -141,14 +203,17 @@ numpy
 scikit-learn
 mlflow
 dvc
+fastapi
+uvicorn
+pydantic
 ```
 
 ## Installation
 
 ```bash
 # Clone the repository
-git clone <your-repo-url>
-cd emotion-detection
+git clone https://github.com/KaranMatt/Emotions-Detection-from-Tweets
+cd Emotions-Detection-from-Tweets
 
 # Install dependencies
 pip install -r requirements.txt
@@ -159,12 +224,22 @@ dvc pull
 
 ## Usage
 
+**Via the API (recommended):**
+
+```bash
+curl -X POST "http://127.0.0.1:8000/predict" \
+     -H "Content-Type: application/json" \
+     -d '{"text": "i feel really happy today"}'
+```
+
+**Directly in Python:**
+
 ```python
 import tensorflow as tf
 import numpy as np
 
 # Load the trained model
-model = tf.keras.models.load_model('Models/lstm.keras')
+model = tf.keras.models.load_model('Models/bilstm.keras')
 
 # Predict emotion from text
 texts = [
@@ -187,11 +262,23 @@ for text, emotion_id in zip(texts, emotions):
 ## Results & Insights
 
 - All models achieved **>92% accuracy** with balanced precision and recall
-- LSTM slightly outperforms GRU in precision (93.82% vs 93.39%)
+- BiLSTM achieves the highest precision (93.97%) by leveraging bidirectional context
+- LSTM and BiLSTM perform comparably overall, with BiLSTM offering richer contextual understanding at the cost of ~2x training time
 - Models handle imbalanced classes well due to class weighting
 - Joy and Sadness (majority classes) show best performance (>94% F1)
 - Surprise (minority class) is most challenging (~83% F1)
 - Early stopping prevented overfitting (models converged in 4-6 epochs)
+
+## Git Version Control
+
+A `.gitignore` is configured to keep the repository clean by excluding large files and generated artifacts that are either DVC-tracked or environment-specific. The following are excluded from Git:
+
+- `Models/` — model files tracked via DVC instead
+- `data/` — dataset tracked via DVC instead
+- `mlruns/` — MLflow experiment logs (local only)
+- `__pycache__/` — Python bytecode cache
+
+DVC pointer files (`.dvc`) and the `main.py` API are committed to Git as they are lightweight and essential for reproducibility and deployment.
 
 ## Project Structure
 
@@ -199,16 +286,19 @@ for text, emotion_id in zip(texts, emotions):
 emotion-detection/
 │
 ├── data/
-│   └── text.csv              # DVC-tracked dataset
+│   └── text.csv              # DVC-tracked dataset (git-ignored)
 │
 ├── Models/
-│   ├── lstm.keras            # DVC-tracked LSTM model
-│   └── gru.keras             # DVC-tracked GRU v1 model
+│   ├── lstm.keras            # DVC-tracked LSTM model (git-ignored)
+│   ├── gru.keras             # DVC-tracked GRU v1 model (git-ignored)
+│   └── bilstm.keras          # DVC-tracked BiLSTM model (git-ignored)
 │
 ├── data.dvc                  # DVC pointer file for dataset
 ├── models.dvc                # DVC pointer file for models
-├── mlruns/                   # MLflow experiment logs
+├── mlruns/                   # MLflow experiment logs (git-ignored)
 ├── Emotion Detection.ipynb   # Main notebook
+├── main.py                   # FastAPI application
+├── .gitignore                # Excludes Models/, data/, mlruns/, __pycache__/
 ├── .dvc/                     # DVC configuration
 ├── .dvcignore
 ├── requirements.txt
@@ -218,12 +308,12 @@ emotion-detection/
 ## Future Improvements
 
 - [ ] Implement attention mechanisms (Bahdanau/Luong attention)
-- [ ] Experiment with Bidirectional LSTM/GRU layers
+- [x] Experiment with Bidirectional LSTM/GRU layers
 - [ ] Try Transformer-based models (BERT, RoBERTa)
 - [ ] Use pre-trained embeddings (GloVe, Word2Vec, FastText)
 - [ ] Apply data augmentation (backtranslation, synonym replacement)
 - [ ] Implement ensemble methods (voting, stacking)
-- [ ] Deploy as REST API using FastAPI/Flask
+- [x] Deploy as REST API using FastAPI
 - [ ] Create web interface with Streamlit/Gradio
 - [ ] Add multilingual support
 - [ ] Perform error analysis on misclassified samples
@@ -232,6 +322,8 @@ emotion-detection/
 ## Author
 
 Karan Mattoo
+
+GitHub: [KaranMatt/Emotions-Detection-from-Tweets](https://github.com/KaranMatt/Emotions-Detection-from-Tweets)
 
 ## Acknowledgments
 
